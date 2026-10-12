@@ -1,5 +1,11 @@
 # IntelliDoc AI
 
+**Live demo: https://amankarar19.github.io/intellidoc-ai/**
+
+[![Test and deploy to GitHub Pages](https://github.com/amankarar19/intellidoc-ai/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/amankarar19/intellidoc-ai/actions/workflows/deploy-pages.yml)
+
+> The live demo needs you to create an account (email and password). Use **fictional documents only**; anything you paste or upload is sent to Google Gemini for analysis.
+
 AI-Powered Document Review and Management System (MCA Semester 5 individual project; evolved from "IntelliDoc Lite").
 
 A React + Vite dashboard for registering document records, applying simple rule-based checks, tracking Pending / Verified / Rejected status, searching, filtering, and exporting CSV reports. Records are stored in a **Supabase PostgreSQL** database. The **AI Review** page sends pasted text or a PDF to **Google Gemini** through a Supabase Edge Function, shows a summary, extracted fields and review hints, and lets a human edit and save the result as **Pending**. Details, deployment and tests: `docs/AI_MODULE.md` and section 7 below.
@@ -16,7 +22,7 @@ npm install
 npm run dev
 ```
 
-Open the URL printed in the terminal (usually http://localhost:5173). With a valid `.env` (section 2) you will see the dashboard with a green **Live · Supabase** badge. Without it you will see a setup screen explaining what to do.
+Open the URL printed in the terminal (usually http://localhost:5173), or use the live demo link at the top of this page. With a valid `.env` (section 2) you will see the dashboard with a green **Live · Supabase** badge. Without it you will see a setup screen explaining what to do.
 
 Other commands:
 
