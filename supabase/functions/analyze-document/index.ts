@@ -110,7 +110,7 @@ function base64UrlToString(part: string): string {
   return atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4))
 }
 
-function readSignedInUser(req: Request, nowMs: number): string | null {
+function readSignedInUser(req: Request, nowMs: number): { sub: string; aal: string } | null {
   const header = req.headers.get('authorization') ?? ''
   const match = /^Bearer\s+([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)$/.exec(header)
   if (!match) return null
@@ -119,7 +119,8 @@ function readSignedInUser(req: Request, nowMs: number): string | null {
     if (!isObject(claims) || claims.role !== 'authenticated') return null
     if (typeof claims.sub !== 'string' || !/^[0-9a-fA-F-]{36}$/.test(claims.sub)) return null
     if (typeof claims.exp === 'number' && claims.exp * 1000 <= nowMs) return null
-    return claims.sub
+    // aal = authenticator assurance level: aal1 after the password only, aal2 after the Google Authenticator code.
+    return { sub: claims.sub, aal: typeof claims.aal === 'string' ? claims.aal : 'aal1' }
   } catch {
     return null
   }
@@ -447,8 +448,11 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
   const declared = Number(req.headers.get('content-length') ?? '0')
   if (declared > MAX_BODY_BYTES) return fail(deps, 413, 'payload_too_large', 'The request is too large.')
 
-  const userId = readSignedInUser(req, deps.now())
-  if (!userId) return fail(deps, 401, 'not_authenticated', 'Please sign in to use AI review.')
+  const caller = readSignedInUser(req, deps.now())
+  if (!caller) return fail(deps, 401, 'not_authenticated', 'Please sign in to use AI review.')
+  // Two-factor sign-in is required: a token from a password-only sign-in (aal1) is refused.
+  if (caller.aal !== 'aal2') return fail(deps, 401, 'mfa_required', 'Please complete two-factor sign-in with your authenticator app.')
+  const userId = caller.sub
 
   const wait = rateLimited(userId, deps.now())
   if (wait > 0) return fail(deps, 429, 'too_many_requests', 'Too many requests. Please wait a few minutes and try again.', { 'Retry-After': String(wait) })

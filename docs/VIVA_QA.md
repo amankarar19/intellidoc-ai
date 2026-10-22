@@ -64,12 +64,12 @@ No login, no file upload, no OCR/AI, no audit log, open demo policies, and pagin
 
 ## Likely follow-ups
 
-- *Why `useMemo`?* To avoid recomputing derived values on every render; the results are always derived from the same `docs` state, so the cards cannot disagree with the table.
-- *Why is the anon key safe to expose?* It is designed to be public; safety must come from RLS policies. The service-role key bypasses RLS and must never be in the frontend.
-- *What happens if two people edit the same record?* The last save wins; there is no conflict detection in the MVP.
-- *How do sorting and paging work?* The records are loaded once, then sorted and sliced 10 per page in the browser with `useMemo`. For very large data sets this would move into the database query (`order`, `range`).
-- *Is this "verification"?* Only in the sense of rule checks on record details. It cannot tell a genuine certificate from a forged one.
-
+- _Why `useMemo`?_ To avoid recomputing derived values on every render; the results are always derived from the same `docs` state, so the cards cannot disagree with the table.
+- _Why is the anon key safe to expose?_ It is designed to be public; safety must come from RLS policies. The service-role key bypasses RLS and must never be in the frontend.
+- _What happens if two people edit the same record?_ The last save wins; there is no conflict detection in the MVP.
+- _How do sorting and paging work?_ The records are loaded once, then sorted and sliced 10 per page in the browser with `useMemo`. For very large data sets this would move into the database query (`order`, `range`).
+- _Is this "verification"?_ Only in the sense of rule checks on record details. It cannot tell a genuine certificate from a forged one.
 
 ## AI questions
+
 See `docs/AI_MODULE.md`, section 8.

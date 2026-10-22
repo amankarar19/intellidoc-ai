@@ -43,7 +43,7 @@ const USER_A = '11111111-1111-4111-8111-111111111111'
 const USER_B = '22222222-2222-4222-8222-222222222222'
 // Fake token: header.payload.signature (the Supabase gateway checks the real signature; the function reads claims)
 const token = (claims) => `${b64url({ alg: 'HS256', typ: 'JWT' })}.${b64url(claims)}.sig`
-const userToken = (sub = USER_A, extra = {}) => token({ role: 'authenticated', sub, exp: Math.floor(NOW / 1000) + 3600, ...extra })
+const userToken = (sub = USER_A, extra = {}) => token({ role: 'authenticated', aal: 'aal2', sub, exp: Math.floor(NOW / 1000) + 3600, ...extra })
 const req = (body, { method = 'POST', user = USER_A, auth, type = 'application/json', raw } = {}) =>
   new Request('https://x.test/functions/v1/analyze-document', {
     method, headers: { 'content-type': type, ...(auth === null ? {} : { authorization: `Bearer ${auth ?? userToken(user)}` }) },
@@ -235,6 +235,18 @@ test('requires a signed-in user: no token, anon key, expired, malformed and bad 
     assert.equal(r.res.status, 401, name); assert.equal(r.json.error.code, 'not_authenticated', name)
   }
   assert.equal(calls.length, 0) // Gemini was never called for any of them
+})
+
+test('two-factor required: a password-only token (aal1, or no aal claim) is refused with mfa_required and Gemini is not called', async () => {
+  const body = { text: 'Sample document text here' }
+  for (const [name, auth] of Object.entries({
+    'aal1': userToken(USER_A, { aal: 'aal1' }),
+    'no aal claim': token({ role: 'authenticated', sub: USER_A, exp: Math.floor(NOW / 1000) + 3600 }),
+  })) {
+    const r = await run(body, { auth })
+    assert.equal(r.res.status, 401, name); assert.equal(r.json.error.code, 'mfa_required', name)
+  }
+  assert.equal(calls.length, 0)
 })
 
 test('logs never contain document text, API key or provider messages', async () => {
