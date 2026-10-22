@@ -37,3 +37,49 @@ test('auth error messages are friendly and never echo unknown provider text', ()
   const unknown = messageForAuthError({ message: 'SECRET internal stack detail' })
   assert.ok(!unknown.includes('SECRET'))
 })
+
+// ---------- two-factor sign-in (Google Authenticator) ----------
+import { qrToImageSrc, normalizeTotpCode, validateTotpCode, mfaStateFromAssurance, formatSecret, messageForMfaError } from '../src/utils/authInput.js'
+
+test('authenticator code: spaces and dashes are removed, exactly six digits are required', () => {
+  assert.equal(normalizeTotpCode(' 123 456 '), '123456')
+  assert.equal(normalizeTotpCode('123-456'), '123456')
+  assert.ok(validateTotpCode(''))
+  assert.ok(validateTotpCode('12345'))
+  assert.ok(validateTotpCode('1234567'))
+  assert.ok(validateTotpCode('12a456'))
+  assert.equal(validateTotpCode('123 456'), '')
+})
+
+test('assurance level decides what the user still has to do', () => {
+  assert.equal(mfaStateFromAssurance({ currentLevel: 'aal2', nextLevel: 'aal2' }), 'ok')
+  assert.equal(mfaStateFromAssurance({ currentLevel: 'aal1', nextLevel: 'aal2' }), 'challenge')
+  assert.equal(mfaStateFromAssurance({ currentLevel: 'aal1', nextLevel: 'aal1' }), 'enroll')
+  assert.equal(mfaStateFromAssurance(null), 'enroll') // unknown never lets the user straight in
+  assert.equal(mfaStateFromAssurance({}), 'enroll')
+})
+
+test('setup key is grouped in fours', () => {
+  assert.equal(formatSecret('ABCDEFGHIJ'), 'ABCD EFGH IJ')
+  assert.equal(formatSecret(undefined), '')
+})
+
+test('authenticator error messages are friendly and never echo unknown provider text', () => {
+  assert.match(messageForMfaError({ code: 'mfa_verification_failed', message: 'Invalid TOTP code entered' }), /not correct or has expired/)
+  assert.match(messageForMfaError({ code: 'mfa_totp_enroll_not_enabled' }), /turned off in Supabase/)
+  assert.match(messageForMfaError({ status: 429, message: 'x' }), /Too many attempts/)
+  assert.match(messageForMfaError(new TypeError('Failed to fetch')), /Could not reach/)
+  const unknown = messageForMfaError({ message: 'SECRET internal stack detail' })
+  assert.ok(!unknown.includes('SECRET'))
+})
+
+test('QR code: the SDK data URI is turned into a safe image source; non-SVG input is refused', () => {
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg"><rect fill="#fff"/></svg>'
+  const src = qrToImageSrc('data:image/svg+xml;utf-8,' + svg)
+  assert.ok(src.startsWith('data:image/svg+xml;charset=utf-8,'))
+  assert.ok(!src.includes('#') && !src.includes('<'))
+  assert.equal(qrToImageSrc(svg), src) // same result with or without the prefix
+  assert.equal(qrToImageSrc(src), src) // already escaped: not escaped twice
+  assert.equal(qrToImageSrc('<script>alert(1)</script>'), '')
+  assert.equal(qrToImageSrc(undefined), '')
+})

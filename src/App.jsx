@@ -28,8 +28,9 @@ import {
 } from 'lucide-react'
 import { createDocument, deleteDocument, listDocuments, updateDocument } from './lib/documents.js'
 import { isSupabaseConfigured, supabaseProjectRef } from './lib/supabase.js'
-import { getSession, onAuthChange, signOut } from './lib/auth.js'
+import { getSession, onAuthChange, signOut, getMfaState } from './lib/auth.js'
 import AuthScreen from './components/AuthScreen.jsx'
+import MfaScreen from './components/MfaScreen.jsx'
 import {
   DOCUMENT_TYPES,
   STATUS,
@@ -848,6 +849,8 @@ function Dashboard({ user, onSignOut, signingOut }) {
 
 function AuthGate() {
   const [session, setSession] = useState(undefined) // undefined = still checking
+  const [mfa, setMfa] = useState(undefined) // undefined = checking; 'ok' | 'challenge' | 'enroll'
+  const [mfaError, setMfaError] = useState('')
   const [signingOut, setSigningOut] = useState(false)
 
   useEffect(() => {
@@ -859,6 +862,25 @@ function AuthGate() {
       stop()
     }
   }, [])
+
+  // Work out whether the signed-in user still has to set up or enter the Google Authenticator code.
+  const userId = session?.user?.id
+  const refreshMfa = useCallback(async () => {
+    setMfaError('')
+    try {
+      setMfa(await getMfaState())
+    } catch (err) {
+      setMfaError(err.message)
+      setMfa(undefined)
+    }
+  }, [])
+  useEffect(() => {
+    if (!userId) {
+      setMfa(undefined)
+      return
+    }
+    refreshMfa()
+  }, [userId, refreshMfa])
 
   async function handleSignOut() {
     setSigningOut(true)
@@ -880,6 +902,30 @@ function AuthGate() {
     )
   }
   if (!session) return <AuthScreen />
+  if (mfaError) {
+    return (
+      <div className="setup-page">
+        <div className="setup-card auth-card">
+          <div className="alert alert-error" role="alert">{mfaError}</div>
+          <button type="button" className="btn btn-primary auth-submit" onClick={refreshMfa}>Try again</button>
+          <p className="muted small auth-switch">
+            <button type="button" className="link-btn" onClick={handleSignOut}>Sign out</button>
+          </p>
+        </div>
+      </div>
+    )
+  }
+  if (mfa === undefined) {
+    return (
+      <div className="setup-page" role="status" aria-live="polite">
+        <div className="muted">Checking your sign-in…</div>
+      </div>
+    )
+  }
+  if (mfa !== 'ok') {
+    // key = mode, so switching between set-up and code entry never reuses old state
+    return <MfaScreen key={mfa} mode={mfa} email={session.user.email} onDone={refreshMfa} onSignOut={handleSignOut} />
+  }
   // key = user id, so no data from a previous user can linger after switching accounts
   return <Dashboard key={session.user.id} user={session.user} onSignOut={handleSignOut} signingOut={signingOut} />
 }

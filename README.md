@@ -148,3 +148,18 @@ Manual test checklist: `docs/AI_MODULE.md`, section 6.
    - Authentication -> URL Configuration -> set **Site URL** to your GitHub Pages address (`https://YOUR-USERNAME.github.io/intellidoc-ai/`) and add `http://localhost:5173` under Redirect URLs.
 3. Redeploy the function if you have not (it now requires a signed-in user), restart `npm run dev`, open the app, **Create an account**, then sign in.
 4. How it works: `AuthGate` in `App.jsx` keeps the session; no session shows `AuthScreen`; a session shows the dashboard. The browser Supabase client automatically sends the user's token with every database and function call, and Row Level Security (`auth.uid() = user_id`) decides which rows are visible. Passwords are handled only by Supabase.
+
+## 9. Two-factor sign-in (Google Authenticator)
+
+After the password, every user must also enter a 6-digit code from **Google Authenticator** (TOTP). The first time, the app shows a QR code to scan; after that it asks only for the code.
+
+1. **Turn it on in Supabase:** Dashboard -> Authentication -> Sign In / Providers -> **Multi-Factor** -> make sure **TOTP** is enabled for both _Enrol_ and _Verify_. (If it is off, the app shows "Authenticator sign-in is turned off in Supabase".)
+2. **Redeploy the Edge Function** (push to `main` or run the deploy workflow). It now refuses a token from a password-only sign-in with `mfa_required`.
+3. **Run `supabase-mfa-migration.sql`** in the SQL Editor (after the login migration). It adds a _restrictive_ policy so the database also requires the code (`aal2`): a password-only token cannot read or change documents even through the API.
+4. Open the app, sign in, scan the QR code with Google Authenticator (**+ -> Scan a QR code**), type the 6-digit code. Next time: password, then code.
+
+How it works: Supabase Auth creates the secret and checks the codes (`supabase.auth.mfa.*` in `src/lib/auth.js`). `AuthGate` asks for the assurance level: `aal1` = password only, `aal2` = password + code. The dashboard is shown only at `aal2`. The secret and codes are never stored by this app.
+
+Limits: there are no recovery codes. If a user loses the phone, remove their factor in Supabase (Authentication -> Users -> the user -> Factors) so they can set up again. Codes depend on the phone's clock being correct.
+
+Tests: `npm test` (28 tests, incl. code input, assurance level, QR handling, error messages) and `npm run test:function` (21 tests, incl. `mfa_required`). The set-up and code screens were checked in a browser with Supabase mocked; the real scan-and-login with your phone has to be tried by you.

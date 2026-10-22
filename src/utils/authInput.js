@@ -44,3 +44,78 @@ export function messageForAuthError(error) {
   if (/invalid api key|invalid jwt|apikey/i.test(raw)) return 'The app\'s Supabase key is not accepted. Check VITE_SUPABASE_ANON_KEY in .env.'
   return 'Something went wrong. Please try again.'
 }
+
+// ---------- two-factor sign-in (Google Authenticator, TOTP) ----------
+
+/** Removes spaces and dashes so "123 456" and "123-456" are accepted. */
+export function normalizeTotpCode(input) {
+  return String(input ?? '').replace(/[\s-]/g, '')
+}
+
+/** Returns an error message, or '' when the code is exactly six digits. */
+export function validateTotpCode(input) {
+  const code = normalizeTotpCode(input)
+  if (!code) return 'Enter the 6-digit code from Google Authenticator.'
+  if (!/^\d{6}$/.test(code)) return 'The code is 6 digits (numbers only).'
+  return ''
+}
+
+/**
+ * What the signed-in user still has to do, from Supabase's assurance levels.
+ *  'ok'        -> signed in with the code (aal2): show the app
+ *  'challenge' -> authenticator already set up, code not entered yet (aal1, next aal2)
+ *  'enroll'    -> no authenticator yet: must scan the QR code first
+ */
+export function mfaStateFromAssurance(assurance) {
+  const current = assurance?.currentLevel
+  const next = assurance?.nextLevel
+  if (current === 'aal2') return 'ok'
+  if (next === 'aal2') return 'challenge'
+  return 'enroll'
+}
+
+/** Groups a secret key in fours for easier typing: "ABCDEFGH" -> "ABCD EFGH". */
+export function formatSecret(secret) {
+  return String(secret ?? '').replace(/\s+/g, '').replace(/(.{4})/g, '$1 ').trim()
+}
+
+/** Friendly sentence for each way the authenticator step can fail. Never echoes unknown provider text. */
+export function messageForMfaError(error) {
+  const raw = String(error?.message ?? '')
+  const code = String(error?.code ?? '')
+  const status = error?.status
+  if (/failed to fetch|networkerror|network request failed|load failed/i.test(raw)) {
+    return 'Could not reach the server. Check your internet connection and try again.'
+  }
+  if (code === 'mfa_verification_failed' || /invalid totp code|verification failed/i.test(raw)) {
+    return 'That code is not correct or has expired. Open Google Authenticator, type the current code and try again.'
+  }
+  if (code === 'mfa_challenge_expired' || /challenge.*expired/i.test(raw)) return 'The code request expired. Please try again.'
+  if (code === 'mfa_factor_not_found') return 'No authenticator was found for this account. Please set it up again.'
+  if (code === 'mfa_totp_enroll_not_enabled' || code === 'mfa_totp_verify_not_enabled' || /mfa.*(disabled|not enabled)|enroll.*disabled/i.test(raw)) {
+    return 'Authenticator sign-in is turned off in Supabase. Enable TOTP under Authentication, Multi-Factor in the Supabase dashboard.'
+  }
+  if (code === 'over_request_rate_limit' || status === 429 || /rate limit|too many/i.test(raw)) {
+    return 'Too many attempts. Please wait a minute and try again.'
+  }
+  if (code === 'session_not_found' || code === 'bad_jwt' || status === 401) return 'Your session has ended. Please sign in again.'
+  return 'Something went wrong with the authenticator step. Please try again.'
+}
+
+/**
+ * Makes the QR code safe to use as an <img> source. supabase-js returns an SVG string with a data-URI prefix
+ * in front but without escaping it, and characters such as "#" (in colours) can cut a data URI short.
+ * Returns '' unless the value is an SVG.
+ */
+export function qrToImageSrc(qr) {
+  const text = String(qr ?? '')
+  const raw = text.replace(/^data:image\/svg\+xml;(?:charset=)?utf-8,/i, '')
+  let svg = raw
+  try {
+    svg = decodeURIComponent(raw) // already escaped values are decoded first so they are not escaped twice
+  } catch {
+    svg = raw
+  }
+  if (!/^\s*<svg[\s>]/i.test(svg)) return ''
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+}

@@ -23,13 +23,13 @@
 
 This is to certify that **[FILL IN: student name]**, Enrolment No. **[FILL IN]**, has carried out the project work entitled **"IntelliDoc AI: AI-Powered Document Review and Management System"** in partial fulfilment of the requirements for the MCA programme, Semester 5, at SAL College, Ahmedabad.
 
-Project Guide: ______________________ (Signature) Date: __________
+Project Guide: ****\*\*****\_\_****\*\***** (Signature) Date: \***\*\_\_\*\***
 
-Head of Department: ______________________ (Signature) Date: __________
+Head of Department: ****\*\*****\_\_****\*\***** (Signature) Date: \***\*\_\_\*\***
 
-External Examiner: ______________________ (Signature) Date: __________
+External Examiner: ****\*\*****\_\_****\*\***** (Signature) Date: \***\*\_\_\*\***
 
-*(Signatures and approvals are to be obtained from the college. Leave blank until then.)*
+_(Signatures and approvals are to be obtained from the college. Leave blank until then.)_
 
 ---
 
@@ -81,27 +81,27 @@ Manual document-record keeping makes it difficult to track document details, rev
 
 **Software**
 
-| Item | Version used |
-|---|---|
-| Operating system | [FILL IN: e.g. Windows 11] |
-| Node.js / npm | 20 or newer ([FILL IN: your version from `node -v`]) |
-| Web browser | Chrome / Edge / Firefox (current) |
-| Code editor | [FILL IN: e.g. VS Code] |
-| Database service | Supabase (free tier), PostgreSQL |
+| Item             | Version used                                         |
+| ---------------- | ---------------------------------------------------- |
+| Operating system | [FILL IN: e.g. Windows 11]                           |
+| Node.js / npm    | 20 or newer ([FILL IN: your version from `node -v`]) |
+| Web browser      | Chrome / Edge / Firefox (current)                    |
+| Code editor      | [FILL IN: e.g. VS Code]                              |
+| Database service | Supabase (free tier), PostgreSQL                     |
 
 **Hardware (minimum):** [FILL IN: e.g. dual-core processor, 4 GB RAM, 1 GB free disk space, internet connection for Supabase and package installation].
 
 ## 11. Technology Stack
 
-| Layer | Technology | Why |
-|---|---|---|
-| UI library | React | Component-based UI; state drives what is shown |
-| Build tool | Vite | Fast dev server and production build |
-| Language | JavaScript (ES modules) | Simple, no compile step beyond Vite |
-| Styling | Plain CSS | No extra setup; full control |
-| Icons | Lucide React | Consistent open-source icons |
-| Backend / DB | Supabase + PostgreSQL | Hosted database with an automatic REST API, free tier |
-| Client library | @supabase/supabase-js | Official JavaScript client |
+| Layer          | Technology              | Why                                                   |
+| -------------- | ----------------------- | ----------------------------------------------------- |
+| UI library     | React                   | Component-based UI; state drives what is shown        |
+| Build tool     | Vite                    | Fast dev server and production build                  |
+| Language       | JavaScript (ES modules) | Simple, no compile step beyond Vite                   |
+| Styling        | Plain CSS               | No extra setup; full control                          |
+| Icons          | Lucide React            | Consistent open-source icons                          |
+| Backend / DB   | Supabase + PostgreSQL   | Hosted database with an automatic REST API, free tier |
+| Client library | @supabase/supabase-js   | Official JavaScript client                            |
 
 ## 12. System Architecture
 
@@ -137,7 +137,7 @@ flowchart LR
 
 ## 14. Data Flow Diagram
 
-**Level 0 (context):** User -> [IntelliDoc AI] -> User, with the data store *documents* attached. The user sends document details and commands; the system returns records, statistics and CSV files.
+**Level 0 (context):** User -> [IntelliDoc AI] -> User, with the data store _documents_ attached. The user sends document details and commands; the system returns records, statistics and CSV files.
 
 **Level 1:**
 
@@ -158,16 +158,16 @@ flowchart LR
 
 Table **documents**
 
-| Column | Type | Constraint |
-|---|---|---|
-| id | UUID | Primary key, default `gen_random_uuid()` |
-| title | TEXT | NOT NULL, not blank |
-| document_type | TEXT | NOT NULL, not blank |
-| document_number | TEXT | NOT NULL, not blank |
-| expiry_date | DATE | Nullable |
-| status | TEXT | NOT NULL, default 'Pending', CHECK in ('Pending','Verified','Rejected') |
-| notes | TEXT | Nullable |
-| created_at | TIMESTAMPTZ | NOT NULL, default `now()` |
+| Column          | Type        | Constraint                                                              |
+| --------------- | ----------- | ----------------------------------------------------------------------- |
+| id              | UUID        | Primary key, default `gen_random_uuid()`                                |
+| title           | TEXT        | NOT NULL, not blank                                                     |
+| document_type   | TEXT        | NOT NULL, not blank                                                     |
+| document_number | TEXT        | NOT NULL, not blank                                                     |
+| expiry_date     | DATE        | Nullable                                                                |
+| status          | TEXT        | NOT NULL, default 'Pending', CHECK in ('Pending','Verified','Rejected') |
+| notes           | TEXT        | Nullable                                                                |
+| created_at      | TIMESTAMPTZ | NOT NULL, default `now()`                                               |
 
 Indexes: status, created_at (descending), expiry_date. Row Level Security is enabled with demo policies (see `supabase.sql`).
 
@@ -259,7 +259,6 @@ Use only sources you actually consulted. Suggested official documentation (check
 6. RFC 4180: Common Format and MIME Type for CSV Files, https://www.rfc-editor.org/rfc/rfc4180
 
 [FILL IN: add access dates and any books/papers/websites you used; remove any you did not use.]
-
 
 ---
 
