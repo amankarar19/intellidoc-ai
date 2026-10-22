@@ -23,11 +23,11 @@
 
 This is to certify that **[FILL IN: student name]**, Enrolment No. **[FILL IN]**, has carried out the project work entitled **"IntelliDoc AI: AI-Powered Document Review and Management System"** in partial fulfilment of the requirements for the MCA programme, Semester 5, at SAL College, Ahmedabad.
 
-Project Guide: ****\*\*****\_\_****\*\***** (Signature) Date: \***\*\_\_\*\***
+Project Guide: **********\_\_********** (Signature) Date: ****\_\_****
 
-Head of Department: ****\*\*****\_\_****\*\***** (Signature) Date: \***\*\_\_\*\***
+Head of Department: **********\_\_********** (Signature) Date: ****\_\_****
 
-External Examiner: ****\*\*****\_\_****\*\***** (Signature) Date: \***\*\_\_\*\***
+External Examiner: **********\_\_********** (Signature) Date: ****\_\_****
 
 _(Signatures and approvals are to be obtained from the college. Leave blank until then.)_
 
